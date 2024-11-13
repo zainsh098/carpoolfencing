@@ -25,10 +25,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.testing.TestNavHostController
+import com.example.carpoolfencing.constants.GeofenceConstant
 import com.example.carpoolfencing.geofence.GeofenceUtil
 import com.example.carpoolfencing.location.LocationUtil
 import com.example.carpoolfencing.location.RequestLocationPermission
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
@@ -71,6 +74,8 @@ fun MapScreen() {
     var permissionGranted by remember { mutableStateOf(false) }
     var geofenceCreated by remember { mutableStateOf(false) }
 
+    val googleMap: GoogleMap? by remember { mutableStateOf(null) }  // Store GoogleMap instance
+
     // Request location permission and update state when granted
     RequestLocationPermission(context = context) {
         permissionGranted = true
@@ -78,12 +83,10 @@ fun MapScreen() {
             location = newLocation
             // Create geofence once location is retrieved
             newLocation?.let {
-                geofenceUtil.createGeoFence(it.latitude, it.longitude)
-                {
-                    geofenceCreated = true
-
-
-                }// Create geofence at user's location
+                // Create geofence and draw circle on map
+                googleMap?.let { map ->
+                    geofenceUtil.createGeoFence(it.latitude, it.longitude, map)
+                }
             }
         }
     }
@@ -91,7 +94,7 @@ fun MapScreen() {
     // Show map if location is available; otherwise, show message based on permission status
     if (permissionGranted) {
         if (location != null) {
-            ShowMap(location!!)
+            ShowMap(location!!, geofenceCreated)
         } else {
             Text("Fetching location...")
         }
@@ -100,9 +103,10 @@ fun MapScreen() {
     }
 }
 
+
 @Composable
-fun ShowMap(location: Location) {
-    val position = LatLng(location.latitude, location.longitude)
+fun ShowMap(location: Location, geofenceCreated: Boolean) {
+    var position = LatLng(location.latitude, location.longitude)
     val markerState = remember { MarkerState(position = position) }
 
     val coordinatesCameraPosition = CameraPosition(
@@ -113,10 +117,7 @@ fun ShowMap(location: Location) {
     )
 
     val cameraPositionState = rememberCameraPositionState {
-        CameraPositionState(
-            coordinatesCameraPosition
-
-        )
+    CameraPositionState(coordinatesCameraPosition)
     }
 
     Box(
@@ -131,9 +132,20 @@ fun ShowMap(location: Location) {
             cameraPositionState = cameraPositionState
         ) {
             Marker(state = markerState)
+
+            // If geofence is created, draw a circle
+            if (geofenceCreated) {
+                CircleOptions()
+                    .center(position)
+                    .radius(GeofenceConstant.GEOFENCE_RADIUS_IN_METERS.toDouble())
+                    .strokeColor(0x5500FF00)
+                    .fillColor(0x2200FF00)
+                    .strokeWidth(5f)
+            }
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

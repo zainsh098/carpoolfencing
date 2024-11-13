@@ -10,10 +10,12 @@ import androidx.core.app.ActivityCompat
 import com.example.carpoolfencing.broadcast.GeofenceBroadcastReceiver
 import com.example.carpoolfencing.constants.GeofenceConstant
 import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.location.Geofence
-import com.google.android.gms.location.GeofencingClient
-import com.google.android.gms.location.GeofencingRequest
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.CircleOptions
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 
 class GeofenceUtil(private val context: Context) {
     private val geofencingClient: GeofencingClient = LocationServices.getGeofencingClient(context)
@@ -34,7 +36,7 @@ class GeofenceUtil(private val context: Context) {
         }.build()
     }
 
-    fun createGeoFence(lat: Double, lng: Double, onGeofenceCreated: () -> Unit) {
+    fun createGeoFence(lat: Double, lng: Double, googleMap: GoogleMap) {
         val geofence = buildGeofence(lat, lng)
         val geofencingRequest = buildGeoFencingRequest(geofence)
         val geofencePendingIntent = getGeofencePendingIntent()
@@ -52,13 +54,26 @@ class GeofenceUtil(private val context: Context) {
         // Add geofence
         geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent)
             .addOnSuccessListener {
-                onGeofenceCreated() // Callback after geofence creation
+                drawCircleOnMap(LatLng(lat, lng), googleMap) // Draw the circle on the map
             }
             .addOnFailureListener { e ->
                 val apiException = e as ApiException
                 Log.e("GeofenceError", "Geofence creation failed with status code: ${apiException.statusCode}")
-                apiException.printStackTrace() // Log the stack trace for further debugging
+                apiException.printStackTrace()
             }
+    }
+
+    private fun drawCircleOnMap(latLng: LatLng, googleMap: GoogleMap) {
+        val circleOptions = CircleOptions()
+            .center(latLng)
+            .radius(GeofenceConstant.GEOFENCE_RADIUS_IN_METERS.toDouble())
+            .strokeColor(0x5500FF00) // Green color with transparency
+            .fillColor(0x2200FF00) // Light green fill color
+            .strokeWidth(5f)
+
+        googleMap.addCircle(circleOptions)
+        googleMap.addMarker(MarkerOptions().position(latLng))
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
     }
 
     private fun getGeofencePendingIntent(): PendingIntent {
