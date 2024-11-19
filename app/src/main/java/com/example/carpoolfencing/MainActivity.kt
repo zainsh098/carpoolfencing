@@ -22,6 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
+import com.example.carpoolfencing.screens.LearnMapScreen
 import com.example.carpoolfencing.screens.LearnScreen
 
 class MainActivity : ComponentActivity() {
@@ -42,6 +43,7 @@ fun NavGraph() {
     NavHost(navController = navController, startDestination = "main") {
         composable("main") { MainScreen(navController) }
         composable("learn") { LearnScreen(navController) }
+        composable("learnMap") { LearnMapScreen(navController) }
     }
 }
 
@@ -52,7 +54,7 @@ fun MainScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center) {
         FilledTonalButton(
             modifier = Modifier.padding(start = 150.dp),
-            onClick = { navController.navigate("learn") }) {
+            onClick = { navController.navigate("learnMap") }) {
             Text(text = "CLICK")
         }
     }

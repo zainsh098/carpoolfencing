@@ -10,7 +10,10 @@ import androidx.core.app.ActivityCompat
 import com.example.carpoolfencing.broadcast.GeofenceBroadcastReceiver
 import com.example.carpoolfencing.constants.GeofenceConstant
 import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.location.*
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofencingClient
+import com.google.android.gms.location.GeofencingRequest
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.CircleOptions
@@ -54,11 +57,14 @@ class GeofenceUtil(private val context: Context) {
         // Add geofence
         geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent)
             .addOnSuccessListener {
-                drawCircleOnMap(LatLng(lat, lng), googleMap) // Draw the circle on the map
+                drawCircleOnMap(LatLng(lat, lng), googleMap) // Centralized circle drawing
             }
             .addOnFailureListener { e ->
                 val apiException = e as ApiException
-                Log.e("GeofenceError", "Geofence creation failed with status code: ${apiException.statusCode}")
+                Log.e(
+                    "GeofenceError",
+                    "Geofence creation failed with status code: ${apiException.statusCode}"
+                )
                 apiException.printStackTrace()
             }
     }
@@ -73,7 +79,7 @@ class GeofenceUtil(private val context: Context) {
 
         googleMap.addCircle(circleOptions)
         googleMap.addMarker(MarkerOptions().position(latLng))
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+//        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 55f))
     }
 
     private fun getGeofencePendingIntent(): PendingIntent {
