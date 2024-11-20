@@ -1,6 +1,6 @@
 // File: com/example/carpoolfencing/util/GeofenceUtil.kt
 
-package com.example.carpoolfencing.util
+package com.example.carpoolfencing.geofence
 
 import GeofenceBroadcastReceiver
 import android.Manifest

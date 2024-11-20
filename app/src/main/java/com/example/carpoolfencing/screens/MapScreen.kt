@@ -9,13 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
-import com.example.carpoolfencing.util.GeofenceUtil
-import com.example.carpoolfencing.viewmodel.MapViewModel
+import com.example.carpoolfencing.geofence.GeofenceUtil
+import com.example.carpoolfencing.MapViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.*
 import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun MapScreen(viewModel: MapViewModel, navController: NavController) {

@@ -1,6 +1,6 @@
 // File: com/example/carpoolfencing/viewmodel/MapViewModel.kt
 
-package com.example.carpoolfencing.viewmodel
+package com.example.carpoolfencing
 
 import android.annotation.SuppressLint
 import android.app.Application
@@ -16,7 +16,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.*
 
