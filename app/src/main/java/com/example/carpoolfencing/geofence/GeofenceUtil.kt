@@ -1,89 +1,62 @@
-package com.example.carpoolfencing.geofence
+// File: com/example/carpoolfencing/util/GeofenceUtil.kt
 
+package com.example.carpoolfencing.util
+
+import GeofenceBroadcastReceiver
 import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import com.example.carpoolfencing.broadcast.GeofenceBroadcastReceiver
-import com.example.carpoolfencing.constants.GeofenceConstant
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.location.Geofence
-import com.google.android.gms.location.GeofencingClient
-import com.google.android.gms.location.GeofencingRequest
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.CircleOptions
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.location.*
 
 class GeofenceUtil(private val context: Context) {
+
     private val geofencingClient: GeofencingClient = LocationServices.getGeofencingClient(context)
 
-    private fun buildGeofence(lat: Double, lng: Double): Geofence {
-        return Geofence.Builder()
-            .setRequestId(GeofenceConstant.GEOFENCE_ID)
-            .setCircularRegion(lat, lng, GeofenceConstant.GEOFENCE_RADIUS_IN_METERS)
-            .setExpirationDuration(GeofenceConstant.GEOFENCE_EXPIRATION_IN_MILLISECONDS)
-            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT)
+    fun createGeoFence(latitude: Double, longitude: Double) {
+        val geofence = Geofence.Builder()
+            .setRequestId("geo_${latitude}_$longitude")
+            .setCircularRegion(latitude, longitude, 100f) // 100 meters radius
+            .setExpirationDuration(Geofence.NEVER_EXPIRE)
+            .setTransitionTypes(
+                Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT
+            )
             .build()
-    }
 
-    private fun buildGeoFencingRequest(geofence: Geofence): GeofencingRequest {
-        return GeofencingRequest.Builder().apply {
-            setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
-            addGeofence(geofence)
-        }.build()
-    }
+        val geofencingRequest = GeofencingRequest.Builder()
+            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            .addGeofence(geofence)
+            .build()
 
-    fun createGeoFence(lat: Double, lng: Double, googleMap: GoogleMap) {
-        val geofence = buildGeofence(lat, lng)
-        val geofencingRequest = buildGeoFencingRequest(geofence)
-        val geofencePendingIntent = getGeofencePendingIntent()
+        val pendingIntent = getGeofencePendingIntent()
 
-        // Check permissions before proceeding
+        // Check for location permissions before adding geofences
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+            ) != android.content.pm.PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != android.content.pm.PackageManager.PERMISSION_GRANTED
         ) {
-            Log.e("GeofenceError", "Permission not granted for location")
+            Log.e("GeofenceUtil", "Location permissions not granted.")
             return
         }
 
-        // Add geofence
-        geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent)
-            .addOnSuccessListener {
-                drawCircleOnMap(LatLng(lat, lng), googleMap) // Centralized circle drawing
+        geofencingClient.addGeofences(geofencingRequest, pendingIntent)?.run {
+            addOnSuccessListener {
+                Log.d("GeofenceUtil", "Geofence added successfully.")
             }
-            .addOnFailureListener { e ->
-                val apiException = e as ApiException
-                Log.e(
-                    "GeofenceError",
-                    "Geofence creation failed with status code: ${apiException.statusCode}"
-                )
-                apiException.printStackTrace()
+            addOnFailureListener {
+                Log.e("GeofenceUtil", "Failed to add geofence: ${it.message}")
             }
-    }
-
-    private fun drawCircleOnMap(latLng: LatLng, googleMap: GoogleMap) {
-        val circleOptions = CircleOptions()
-            .center(latLng)
-            .radius(GeofenceConstant.GEOFENCE_RADIUS_IN_METERS.toDouble())
-            .strokeColor(0x5500FF00) // Green color with transparency
-            .fillColor(0x2200FF00) // Light green fill color
-            .strokeWidth(5f)
-
-        googleMap.addCircle(circleOptions)
-        googleMap.addMarker(MarkerOptions().position(latLng))
-//        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 55f))
+        }
     }
 
     private fun getGeofencePendingIntent(): PendingIntent {
-        val intent = Intent(context, GeofenceBroadcastReceiver::class.java) // Geofence receiver
+        val intent = Intent(context, GeofenceBroadcastReceiver::class.java)
         return PendingIntent.getBroadcast(
             context,
             0,
