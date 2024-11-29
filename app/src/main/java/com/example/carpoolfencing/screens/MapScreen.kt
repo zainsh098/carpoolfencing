@@ -1,66 +1,37 @@
-// File: com/example/carpoolfencing/screens/MapScreen.kt
-
 package com.example.carpoolfencing.screens
 
 import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
-import com.example.carpoolfencing.geofence.GeofenceUtil
-import com.example.carpoolfencing.MapViewModel
+import com.example.carpoolfencing.viewmodel.RoutingViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.PolygonOptions
 import com.google.maps.android.compose.*
-import com.google.android.gms.maps.model.CameraPosition
 
 @Composable
-fun MapScreen(viewModel: MapViewModel, navController: NavController) {
-    val context = LocalContext.current
-
-    // Collect StateFlows from ViewModel
-    val currentLocation by viewModel.currentLocation.collectAsState()
+fun MapScreen(viewModel: RoutingViewModel, navController: NavController) {
     val startCoordinates by viewModel.startCoordinates.collectAsState()
     val endCoordinates by viewModel.endCoordinates.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
+    val routeResponse by viewModel.routeResponse.collectAsState()
 
-    // Log coordinates for debugging
-    Log.d("MapScreen", "Current Location: $currentLocation")
-    Log.d("MapScreen", "Start Coordinates: $startCoordinates")
-    Log.d("MapScreen", "End Coordinates: $endCoordinates")
+    val cameraPositionState = rememberCameraPositionState()
 
-    // Initialize camera position
-    val cameraPositionState = rememberCameraPositionState {
-        currentLocation?.let {
-            position = CameraPosition.fromLatLngZoom(it, 15f)
-        }
-    }
-
-    // Add LaunchedEffect to update camera position when start or end coordinates change
+    // Adjust the camera to show both start and end coordinates
     LaunchedEffect(startCoordinates, endCoordinates) {
-        Log.d("MapScreen", "Coordinates updated: start=$startCoordinates, end=$endCoordinates")
-
         if (startCoordinates != null && endCoordinates != null) {
-            Log.d("MapScreen", "Moving camera to show both locations")
             val bounds = LatLngBounds.builder()
                 .include(startCoordinates!!)
                 .include(endCoordinates!!)
                 .build()
-
-            // Adjust the camera to include both locations with padding
-            cameraPositionState.animate(
-                CameraUpdateFactory.newLatLngBounds(bounds, 100)
-            )
-        } else if (currentLocation != null) {
-            Log.d("MapScreen", "Moving camera to current location")
-            cameraPositionState.animate(
-                CameraUpdateFactory.newLatLngZoom(currentLocation!!, 15f)
-            )
+            cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 100))
         }
     }
 
+    // Initialize the GoogleMap composable
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
@@ -72,65 +43,47 @@ fun MapScreen(viewModel: MapViewModel, navController: NavController) {
             isMyLocationEnabled = true
         )
     ) {
-        // Add a marker for current location if available
-        currentLocation?.let {
-            Marker(
-                state = MarkerState(position = it),
-                title = "You are here",
-                snippet = "Current Location"
-            )
-        }
-
-        // Start Location Marker
+        // Add markers for start and end locations
         startCoordinates?.let {
-            Log.d("MapScreen", "Placing start location marker: $it")
             Marker(
                 state = MarkerState(position = it),
                 title = "Start Location",
-                snippet = "Your starting point"
+                snippet = "This is your starting point."
             )
         }
-
-        // End Location Marker
         endCoordinates?.let {
-            Log.d("MapScreen", "Placing end location marker: $it")
             Marker(
                 state = MarkerState(position = it),
                 title = "End Location",
-                snippet = "Your destination"
+                snippet = "This is your destination."
             )
         }
 
-        // Draw Polyline between the two locations if both are available
-        if (startCoordinates != null && endCoordinates != null) {
-            Polyline(
-                points = listOfNotNull(startCoordinates, endCoordinates),
-                color = Color.Green,
-                width = 5f
-            )
+        // Draw the polygon for the route, if available
+        routeResponse?.routes?.firstOrNull()?.legs?.firstOrNull()?.points?.let { points ->
+            // Log the points for debugging
+            Log.d("MapScreen", "Route Points: $points")
+
+            // Convert the points to LatLng
+            val polygonPoints = points.map { LatLng(it.latitude, it.longitude) }
+
+            // Log polygon points to verify they're correct
+            Log.d("MapScreen", "Polygon Points: $polygonPoints")
+
+            if (polygonPoints.isNotEmpty()) {
+                // Create PolygonOptions instance and add the points to the polygon
+                val polygonOptions = PolygonOptions()
+                    .addAll(polygonPoints)
+                    .strokeColor(0xFFFF0000.toInt()) // Border color
+                    .fillColor(0x7FFF0000.toInt())  // Fill color with transparency (50% opacity)
+
+                // Add the polygon to the map
+                Polygon(polygonOptions.points)
+            } else {
+                Log.e("MapScreen", "No points available to draw a polygon.")
+            }
+        } ?: run {
+            Log.e("MapScreen", "No route points available.")
         }
-
-    }
-
-    // Handle geofencing
-    LaunchedEffect(startCoordinates, endCoordinates) {
-        if (startCoordinates != null && endCoordinates != null) {
-            Log.d("MapScreen", "Setting up geofencing for start and end locations")
-            val geofenceUtil = GeofenceUtil(context)
-            geofenceUtil.createGeoFence(
-                latitude = startCoordinates!!.latitude,
-                longitude = startCoordinates!!.longitude
-            )
-            geofenceUtil.createGeoFence(
-                latitude = endCoordinates!!.latitude,
-                longitude = endCoordinates!!.longitude
-            )
-        }
-    }
-
-    // Optionally, display error messages
-    errorMessage?.let { error ->
-        // Implement your UI for displaying error messages, e.g., a Snackbar or Toast
-        Log.e("MapScreen", "Error: $error")
     }
 }

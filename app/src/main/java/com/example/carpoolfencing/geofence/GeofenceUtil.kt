@@ -2,7 +2,7 @@
 
 package com.example.carpoolfencing.geofence
 
-import GeofenceBroadcastReceiver
+import com.example.carpoolfencing.broadcast.GeofenceBroadcastReceiver
 import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
@@ -17,6 +17,7 @@ class GeofenceUtil(private val context: Context) {
 
     fun createGeoFence(latitude: Double, longitude: Double) {
         val geofence = Geofence.Builder()
+
             .setRequestId("geo_${latitude}_$longitude")
             .setCircularRegion(latitude, longitude, 100f) // 100 meters radius
             .setExpirationDuration(Geofence.NEVER_EXPIRE)

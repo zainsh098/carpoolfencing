@@ -30,7 +30,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Register GeofenceBroadcastReceiver -->
+        <!-- Register com.example.carpoolfencing.broadcast.GeofenceBroadcastReceiver -->
         <receiver android:name=".broadcast.GeofenceBroadcastReceiver"
             android:enabled="true"
             android:exported="true">

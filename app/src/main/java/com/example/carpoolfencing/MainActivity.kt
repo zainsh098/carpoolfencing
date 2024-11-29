@@ -20,6 +20,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.carpoolfencing.screens.LearnMapScreen
+import com.example.carpoolfencing.viewmodel.MapViewModel
+import com.example.carpoolfencing.viewmodel.RoutingViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +38,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun NavGraph() {
     val navController = rememberNavController()
-    val mapViewModel: MapViewModel = viewModel()
+    val mapViewModel: RoutingViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = "main") {
         composable("main") { MainScreen(navController) }

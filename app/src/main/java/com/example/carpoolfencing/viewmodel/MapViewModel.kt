@@ -1,14 +1,12 @@
-// File: com/example/carpoolfencing/viewmodel/MapViewModel.kt
 
-package com.example.carpoolfencing
+package com.example.carpoolfencing.viewmodel
 
 import android.annotation.SuppressLint
-import android.app.Application
 import android.content.Context
 import android.location.Geocoder
 import android.location.Location
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
@@ -19,7 +17,7 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.*
 
-class MapViewModel(application: Application) : AndroidViewModel(application) {
+class MapViewModel(context: Context) : ViewModel() {
 
     private val _currentLocation = MutableStateFlow<LatLng?>(null)
     val currentLocation: StateFlow<LatLng?> = _currentLocation
@@ -27,11 +25,11 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
+    private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
     // Expose startLocation and endLocation as StateFlow
     private val _startLocation = MutableStateFlow<String>("")
-    val startLocation: StateFlow<String> = _startLocation
+  val startLocation: StateFlow<String> = _startLocation
 
     private val _endLocation = MutableStateFlow<String>("")
     val endLocation: StateFlow<String> = _endLocation
@@ -65,13 +63,7 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
             }
     }
 
-    fun setStartLocation(address: String) {
-        _startLocation.value = address
-    }
 
-    fun setEndLocation(address: String) {
-        _endLocation.value = address
-    }
 
     fun updateStartCoordinates(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -122,3 +114,4 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 }
+
