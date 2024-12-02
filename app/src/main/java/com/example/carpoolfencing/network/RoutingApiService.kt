@@ -1,18 +1,18 @@
+
+
 package com.example.carpoolfencing.network
 
-import RoutingApiResponse
+import com.example.carpoolfencing.models.RoutingApiResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-interface RoutingApiService {
-
-    @GET("calculateRoute/{locations}/{contentType}")
+interface RoutingApi {
+    @GET("calculateRoute/{locations}/json")
     suspend fun getRoute(
-        @Path("locations") locations: String,
-        @Path("contentType") contentType: String = "json",
-//        @Query("routeType") routeType: String = "fastest",
-//        @Query("travelMode") travelMode: String = "car",
-        @Query("key") apiKey: String =  "231bwmiYI6NZNOod9nAxYHmfPRGP5ssn"
+        @Path("locations") locations: String, // Full coordinates as string
+        @Query("routeRepresentation") routeRepresentation: String = "polyline", // Default to polyline
+        @Query("key") apiKey: String // API key
     ): RoutingApiResponse
 }
+

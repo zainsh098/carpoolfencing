@@ -78,7 +78,9 @@ fun RideAppBottomSheet(viewModel: RoutingViewModel) {
             onClick = {
                 viewModel.setStartLocation(startLocation, context)
                 viewModel.setEndLocation(endLocation, context)
-                viewModel.fetchRoute()
+                viewModel.fetchRoute(
+                    apiKey = "231bwmiYI6NZNOod9nAxYHmfPRGP5ssn"
+                )
             }
         ) {
             Text(text = "Show Directions")
@@ -139,3 +141,5 @@ fun BeautifulTextField(
             .background(Color.White, shape)
     )
 }
+
+
