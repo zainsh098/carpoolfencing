@@ -20,13 +20,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.carpoolfencing.screens.LearnMapScreen
-import com.example.carpoolfencing.viewmodel.MapViewModel
+import com.example.carpoolfencing.viewmodel.GeocodingViewModel
 import com.example.carpoolfencing.viewmodel.RoutingViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (ContextCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
         }
 
         setContent {
@@ -39,21 +43,29 @@ class MainActivity : ComponentActivity() {
 fun NavGraph() {
     val navController = rememberNavController()
     val mapViewModel: RoutingViewModel = viewModel()
+    val geocodingViewModel: GeocodingViewModel = viewModel()
+
 
     NavHost(navController = navController, startDestination = "main") {
-        composable("main") { MainScreen(navController) }
+        composable("main") { MainScreen(navController,geocodingViewModel) }
         composable("learnMap") { LearnMapScreen(navController, mapViewModel) }
     }
 }
 
 @Composable
-fun MainScreen(navController: NavController) {
+fun MainScreen(navController: NavController,viewModel: GeocodingViewModel) {
+
     Column(
         Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center) {
+        verticalArrangement = Arrangement.Center
+    ) {
         FilledTonalButton(
             modifier = Modifier.padding(start = 150.dp),
-            onClick = { navController.navigate("learnMap") }) {
+            onClick = {
+                navController.navigate("learnMap")
+
+                viewModel.fetchCoordinates("islamabad")
+            }) {
             Text(text = "CLICK")
         }
     }

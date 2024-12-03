@@ -1,15 +1,14 @@
 package com.example.carpoolfencing.screens
 
-import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -28,26 +27,55 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.carpoolfencing.viewmodel.RoutingViewModel
 
+
+@Composable
+@Preview
+fun LearnMapScreenPreview() {
+
+    val mockViewModel = RoutingViewModel()
+    val mocknavController = rememberNavController()
+    LearnMapScreen(
+
+        navController = mocknavController,
+        viewModel = mockViewModel
+
+    )}
+
 @OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun LearnMapScreen(navController: NavController, viewModel: RoutingViewModel) {
     val scaffoldState = rememberBottomSheetScaffoldState()
 
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        sheetContent = {
-            RideAppBottomSheet(viewModel = viewModel)
-        },
-        sheetPeekHeight = 64.dp,
-        sheetContainerColor = Color.White,
-        modifier = Modifier.fillMaxSize()
-    ) {
+
+    Column(modifier = Modifier.fillMaxSize().fillMaxWidth()) {
+
+        BottomSheetScaffold(
+            scaffoldState = scaffoldState,
+            sheetContent = {
+                RideAppBottomSheet(viewModel = viewModel)
+            },
+            sheetPeekHeight = 64.dp,
+            sheetContainerColor = Color.White,
+            modifier = Modifier.fillMaxSize()
+        ) {
         MapScreen(viewModel = viewModel, navController = navController)
+
+        }
+
+//
+//        Box(
+//            modifier = Modifier.height(100.dp).width(100.dp).background(Color.Red))
+
+
+
     }
 }
 
@@ -62,52 +90,21 @@ fun RideAppBottomSheet(viewModel: RoutingViewModel) {
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        BeautifulTextField(
-            hint = "Enter Start Location",
-            onTextChange = { startLocation = it }
-        )
-        BeautifulTextField(
-            hint = "Enter End Location",
-            onTextChange = { endLocation = it }
-        )
+        BeautifulTextField(hint = "Enter Start Location", onTextChange = { startLocation = it })
+        BeautifulTextField(hint = "Enter End Location", onTextChange = { endLocation = it })
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        FilledTonalButton(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = {
-                viewModel.setStartLocation(startLocation, context)
-                viewModel.setEndLocation(endLocation, context)
-                viewModel.fetchRoute(
-                    apiKey = "231bwmiYI6NZNOod9nAxYHmfPRGP5ssn"
-                )
-            }
-        ) {
+        FilledTonalButton(modifier = Modifier.fillMaxWidth(), onClick = {
+            viewModel.setStartLocation(startLocation, context)
+            viewModel.setEndLocation(endLocation, context)
+            viewModel.fetchRoute()
+        }) {
             Text(text = "Show Directions")
         }
     }
 }
 
-@Composable
-fun LocationInputFields(
-    viewModel: RoutingViewModel,
-    context: Context
-) {
-    Column {
-        BeautifulTextField(
-            hint = "Enter Start Location",
-            onTextChange = { text ->
-                viewModel.setStartLocation(text,context)
-            }
-        )
-        BeautifulTextField(
-            hint = "Enter End Location",
-            onTextChange = { text ->
-                viewModel.setEndLocation(text,context)
-            }
-        )
-    }
-}
 
 @Composable
 fun BeautifulTextField(
@@ -122,7 +119,7 @@ fun BeautifulTextField(
         value = text,
         onValueChange = {
             text = it
-            onTextChange(it)  // Notify parent of changes
+            onTextChange(it)
         },
         placeholder = {
             Text(

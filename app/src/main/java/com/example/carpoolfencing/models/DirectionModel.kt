@@ -3,7 +3,6 @@ package com.example.carpoolfencing.models
 data class RoutingApiResponse(
     val routes: List<Route> = emptyList()
 )
-
 data class Route(
     val summary: RouteSummary,
     val legs: List<Leg>,

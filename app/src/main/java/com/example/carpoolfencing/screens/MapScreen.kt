@@ -65,22 +65,22 @@ fun MapScreen(viewModel: RoutingViewModel, navController: NavController) {
     }
 }
 
-@Composable
-fun DrawRouteOnMap(routeResponse: RoutingApiResponse) {
-    val points = routeResponse.routes.firstOrNull()?.legs?.firstOrNull()?.points
-
-    val latLngList = points?.map { point ->
-        LatLng(point.latitude, point.longitude)
-    } ?: emptyList()
-
-    if (latLngList.isNotEmpty()) {
-        Polyline(
-            points = latLngList,
-            color = Color.Red, // Set polyline color
-            width = 8f // Set the polyline width
-        )
-        Log.d("MapScreen", "Adding polyline with ${latLngList.size} points.")
-    } else {
-        Log.e("MapScreen", "No route points available")
-    }
-}
+//@Composable
+//fun DrawRouteOnMap(routeResponse: RoutingApiResponse) {
+//    val points = routeResponse.routes.firstOrNull()?.legs?.firstOrNull()?.points
+//
+//    val latLngList = points?.map { point ->
+//        LatLng(point.latitude, point.longitude)
+//    } ?: emptyList()
+//
+//    if (latLngList.isNotEmpty()) {
+//        Polyline(
+//            points = latLngList,
+//            color = Color.Red, // Set polyline color
+//            width = 8f // Set the polyline width
+//        )
+//        Log.d("MapScreen", "Adding polyline with ${latLngList.size} points.")
+//    } else {
+//        Log.e("MapScreen", "No route points available")
+//    }
+//}
