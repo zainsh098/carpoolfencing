@@ -29,7 +29,7 @@ data class Result(
 )
 
 data class MatchConfidence(
-    val score: Long,
+    val score: Double,
 )
 
 data class Address(
