@@ -47,14 +47,13 @@ fun NavGraph() {
 
 
     NavHost(navController = navController, startDestination = "main") {
-        composable("main") { MainScreen(navController,geocodingViewModel) }
-        composable("learnMap") { LearnMapScreen(navController, mapViewModel) }
+        composable("main") { MainScreen(navController) }
+        composable("learnMap") { LearnMapScreen(navController, mapViewModel,geocodingViewModel) }
     }
 }
 
 @Composable
-fun MainScreen(navController: NavController,viewModel: GeocodingViewModel) {
-
+fun MainScreen(navController: NavController,) {
     Column(
         Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center
@@ -64,7 +63,6 @@ fun MainScreen(navController: NavController,viewModel: GeocodingViewModel) {
             onClick = {
                 navController.navigate("learnMap")
 
-                viewModel.fetchCoordinates("islamabad")
             }) {
             Text(text = "CLICK")
         }
