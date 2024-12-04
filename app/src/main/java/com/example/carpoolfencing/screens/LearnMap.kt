@@ -1,14 +1,13 @@
 package com.example.carpoolfencing.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -23,8 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.carpoolfencing.viewmodel.GeocodingViewModel
 import com.example.carpoolfencing.viewmodel.RoutingViewModel
 
 
@@ -40,66 +38,78 @@ import com.example.carpoolfencing.viewmodel.RoutingViewModel
 fun LearnMapScreenPreview() {
 
     val mockViewModel = RoutingViewModel()
+    val mockGeocodingViewModel = GeocodingViewModel()
     val mocknavController = rememberNavController()
     LearnMapScreen(
 
         navController = mocknavController,
-        viewModel = mockViewModel
+        viewModel = mockViewModel,
+        viewModelGeoCode = mockGeocodingViewModel
 
-    )}
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 
 @Composable
-fun LearnMapScreen(navController: NavController, viewModel: RoutingViewModel) {
+fun LearnMapScreen(
+    navController: NavController,
+    viewModel: RoutingViewModel,
+    viewModelGeoCode: GeocodingViewModel
+) {
     val scaffoldState = rememberBottomSheetScaffoldState()
 
 
-    Column(modifier = Modifier.fillMaxSize().fillMaxWidth()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .fillMaxWidth()
+    ) {
 
         BottomSheetScaffold(
             scaffoldState = scaffoldState,
             sheetContent = {
-                RideAppBottomSheet(viewModel = viewModel)
+                RideAppBottomSheet(viewModel = viewModel, viewModelGeoCode = viewModelGeoCode)
             },
             sheetPeekHeight = 64.dp,
             sheetContainerColor = Color.White,
             modifier = Modifier.fillMaxSize()
         ) {
-        MapScreen(viewModel = viewModel, navController = navController)
+
+            MapScreen(viewModel = viewModel, navController = navController)
 
         }
-
-//
-//        Box(
-//            modifier = Modifier.height(100.dp).width(100.dp).background(Color.Red))
-
 
 
     }
 }
 
 @Composable
-fun RideAppBottomSheet(viewModel: RoutingViewModel) {
-    val context = LocalContext.current
+fun RideAppBottomSheet(viewModel: RoutingViewModel, viewModelGeoCode: GeocodingViewModel) {
     var startLocation by remember { mutableStateOf("") }
     var endLocation by remember { mutableStateOf("") }
+    viewModel.observeGeocodingUpdates(viewModelGeoCode)
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        BeautifulTextField(hint = "Enter Start Location", onTextChange = { startLocation = it })
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(16.dp)) {
+        BeautifulTextField(
+            hint = "Enter Start Location",
+            onTextChange = {
+
+                startLocation = it
+            }
+        )
         BeautifulTextField(hint = "Enter End Location", onTextChange = { endLocation = it })
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        FilledTonalButton(modifier = Modifier.fillMaxWidth(), onClick = {
-            viewModel.setStartLocation(startLocation, context)
-            viewModel.setEndLocation(endLocation, context)
-            viewModel.fetchRoute()
-        }) {
+        FilledTonalButton(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                viewModelGeoCode.fetchCoordinates(startLocation, endLocation)
+            }
+        ) {
             Text(text = "Show Directions")
         }
     }
@@ -109,9 +119,9 @@ fun RideAppBottomSheet(viewModel: RoutingViewModel) {
 @Composable
 fun BeautifulTextField(
     modifier: Modifier = Modifier,
-    hint: String = "Enter text",
+    hint: String,
     onTextChange: (String) -> Unit,
-    shape: Shape = MaterialTheme.shapes.medium,
+    shape: CornerBasedShape = MaterialTheme.shapes.medium,
 ) {
     var text by remember { mutableStateOf("") }
 
