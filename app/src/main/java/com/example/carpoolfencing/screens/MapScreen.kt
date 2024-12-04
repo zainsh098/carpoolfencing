@@ -2,25 +2,14 @@ package com.example.carpoolfencing.screens
 
 import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
-import com.example.carpoolfencing.models.RoutingApiResponse
 import com.example.carpoolfencing.viewmodel.RoutingViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
-import com.google.maps.android.compose.Polyline
-import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.*
 
 @Composable
 fun MapScreen(viewModel: RoutingViewModel, navController: NavController) {
@@ -46,7 +35,6 @@ fun MapScreen(viewModel: RoutingViewModel, navController: NavController) {
         uiSettings = MapUiSettings(myLocationButtonEnabled = true, zoomControlsEnabled = false),
         properties = MapProperties(isMyLocationEnabled = true)
     ) {
-        // Add markers for start and end locations
         startCoordinates?.let {
             Marker(state = MarkerState(position = it), title = "Start Location")
         }
@@ -54,33 +42,13 @@ fun MapScreen(viewModel: RoutingViewModel, navController: NavController) {
             Marker(state = MarkerState(position = it), title = "End Location")
         }
 
-        // Draw the polyline for the route
         if (routePoints.isNotEmpty()) {
             Polyline(
                 points = routePoints,
                 color = Color.Red,
                 width = 8f
             )
+            Log.d("MapScreen", "Route points: $routePoints")
         }
     }
 }
-
-//@Composable
-//fun DrawRouteOnMap(routeResponse: RoutingApiResponse) {
-//    val points = routeResponse.routes.firstOrNull()?.legs?.firstOrNull()?.points
-//
-//    val latLngList = points?.map { point ->
-//        LatLng(point.latitude, point.longitude)
-//    } ?: emptyList()
-//
-//    if (latLngList.isNotEmpty()) {
-//        Polyline(
-//            points = latLngList,
-//            color = Color.Red, // Set polyline color
-//            width = 8f // Set the polyline width
-//        )
-//        Log.d("MapScreen", "Adding polyline with ${latLngList.size} points.")
-//    } else {
-//        Log.e("MapScreen", "No route points available")
-//    }
-//}
