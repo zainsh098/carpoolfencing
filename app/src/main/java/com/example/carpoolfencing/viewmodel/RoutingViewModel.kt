@@ -1,19 +1,14 @@
 package com.example.carpoolfencing.viewmodel
 
-import android.content.Context
-import android.location.Geocoder
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.carpoolfencing.network.RetrofitInstance
+import com.example.carpoolfencing.repository.SharedRepository
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.io.IOException
-import java.math.BigDecimal
-import java.math.RoundingMode
-import java.util.Locale
 
 class RoutingViewModel : ViewModel() {
 
@@ -26,89 +21,43 @@ class RoutingViewModel : ViewModel() {
     private val _endCoordinates = MutableStateFlow<LatLng?>(null)
     val endCoordinates: StateFlow<LatLng?> = _endCoordinates
 
-//    private val _isLoading = MutableStateFlow(false)
-
-    private val _distance = MutableStateFlow<Int?>(null)
-    val distance: StateFlow<Int?> = _distance
-//    val isLoading: StateFlow<Boolean> = _isLoading
-
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    fun setStartLocation(location: String, context: Context) {
-        val coordinates = getCoordinatesFromAddress(location, context)
-        Log.d("Start Coordinates Are : ", "${coordinates!!.latitude}${coordinates.longitude}")
-        if (coordinates != null) {
-            _startCoordinates.value = coordinates
-        } else {
-            _errorMessage.value = "Invalid start location."
-        }
-    }
-
-    fun setEndLocation(location: String, context: Context) {
-        val coordinates = getCoordinatesFromAddress(location, context)
-        Log.d("End Coordinates Are : ", "${coordinates!!.latitude}${coordinates.longitude}")
-
-        if (coordinates != null) {
-            _endCoordinates.value = coordinates
-        } else {
-            _errorMessage.value = "Invalid end location."
-        }
-    }
-
-    private fun getCoordinatesFromAddress(address: String, context: Context): LatLng? {
-        val geocoder = Geocoder(context, Locale.getDefault())
-        return try {
-            val addressList = geocoder.getFromLocationName(address, 1)
-            if (addressList?.isNotEmpty() == true) {
-                val location = addressList[0]
-                val formattedLatitude = String.format("%.5f", location.latitude)
-                val formattedLongitude = String.format("%.5f", location.longitude)
-
-                val roundedLatitude =
-                    BigDecimal(formattedLatitude).setScale(4, RoundingMode.UP)
-                val roundedLongitude =
-                    BigDecimal(formattedLongitude).setScale(4, RoundingMode.UP)
-                Log.d("Rouneded LAT ", roundedLatitude.toPlainString())
-                Log.d("Rouneded Longs ", roundedLongitude.toPlainString())
-
-                LatLng(roundedLatitude.toDouble(), roundedLongitude.toDouble())
-            } else {
-                null
+    fun observeGeocodingUpdates(geocodingViewModel: GeocodingViewModel) {
+        viewModelScope.launch {
+            geocodingViewModel.coordinatesFetched.collect { isFetched ->
+                if (isFetched) {
+                    fetchRoute()
+                }
             }
-        } catch (e: IOException) {
-            Log.e("Geocoder", "Error fetching coordinates for address $address", e)
-            null
         }
     }
 
     fun fetchRoute() {
-//        _isLoading.value = true
-        _errorMessage.value = null
-
         viewModelScope.launch {
+            _startCoordinates.value = SharedRepository.startCoordinates.value
+            _endCoordinates.value = SharedRepository.endCoordinates.value
+
             val startCoordinates = _startCoordinates.value
             val endCoordinates = _endCoordinates.value
 
             if (startCoordinates != null && endCoordinates != null) {
                 val locations =
                     "${startCoordinates.latitude},${startCoordinates.longitude}:${endCoordinates.latitude},${endCoordinates.longitude}"
-                Log.d("Route Request", "Request URL: $locations")
+              Log.d("Coodites :",locations)
                 try {
+
                     val response = RetrofitInstance.api.getRoute(
                         locations = locations,
                         routeRepresentation = "polyline",
+                        travelMode = "car",
                         apiKey = "231bwmiYI6NZNOod9nAxYHmfPRGP5ssn"
                     )
 
                     if (response.routes.isNotEmpty()) {
                         val points = response.routes[0].legs[0].points
-                        _distance.value = response.routes[0].summary.lengthInMeters
-
-
-
                         _routePoints.value = points.map { LatLng(it.latitude, it.longitude) }
-                        Log.d("Route Points", "Fetched ${points.size} points for the route.")
                     } else {
                         _errorMessage.value = "No routes found."
                     }

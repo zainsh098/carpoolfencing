@@ -1,7 +1,6 @@
 package com.example.carpoolfencing.network
 
 import com.example.carpoolfencing.models.GeocodingModelResponse
-import com.example.carpoolfencing.models.Position
 import com.example.carpoolfencing.models.RoutingApiResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -12,7 +11,11 @@ interface RoutingApi {
     suspend fun getRoute(
         @Path("locations") locations: String, // Full coordinates as string
         @Query("routeRepresentation") routeRepresentation: String = "polyline", // Default to polyline
-        @Query("key") apiKey: String // API key
+        @Query("travelMode") travelMode: String = "car",
+        @Query("routeType") routeType: String = "fastest",
+        @Query("avoid") avoid: String = "tollRoads",
+        @Query("traffic") traffic: Boolean = true,
+        @Query("key") apiKey: String
     ): RoutingApiResponse
 }
 
