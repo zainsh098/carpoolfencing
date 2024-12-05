@@ -16,6 +16,7 @@ fun MapScreen(viewModel: RoutingViewModel, navController: NavController) {
     val startCoordinates by viewModel.startCoordinates.collectAsState()
     val endCoordinates by viewModel.endCoordinates.collectAsState()
     val routePoints by viewModel.routePoints.collectAsState()
+    val geofences by viewModel.geofences.collectAsState()
 
     val cameraPositionState = rememberCameraPositionState()
 
@@ -31,6 +32,7 @@ fun MapScreen(viewModel: RoutingViewModel, navController: NavController) {
 
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
+
         cameraPositionState = cameraPositionState,
         uiSettings = MapUiSettings(myLocationButtonEnabled = true, zoomControlsEnabled = false),
         properties = MapProperties(isMyLocationEnabled = true)
@@ -42,6 +44,14 @@ fun MapScreen(viewModel: RoutingViewModel, navController: NavController) {
             Marker(state = MarkerState(position = it), title = "End Location")
         }
 
+        geofences.forEach { geofence ->
+            Circle(
+                center = geofence,
+                radius = 900.0, // Use the same radius as in your geofence
+                strokeColor = Color.Red,
+                fillColor = Color.Red.copy(alpha = 0.2f)
+            )
+        }
         if (routePoints.isNotEmpty()) {
             Polyline(
                 points = routePoints,

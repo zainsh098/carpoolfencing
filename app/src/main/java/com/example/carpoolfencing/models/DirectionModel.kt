@@ -7,6 +7,7 @@ data class Route(
     val summary: RouteSummary,
     val legs: List<Leg>,
     val sections: List<Section>
+
 )
 
 data class RouteSummary(

@@ -1,8 +1,11 @@
 package com.example.carpoolfencing.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.carpoolfencing.constants.GeofenceConstant
+import com.example.carpoolfencing.geofence.GeofenceUtil
 import com.example.carpoolfencing.network.RetrofitInstance
 import com.example.carpoolfencing.repository.SharedRepository
 import com.google.android.gms.maps.model.LatLng
@@ -11,6 +14,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class RoutingViewModel : ViewModel() {
+
+    private val _geofences = MutableStateFlow<List<LatLng>>(emptyList())
+    val geofences: StateFlow<List<LatLng>> = _geofences
 
     private val _routePoints = MutableStateFlow<List<LatLng>>(emptyList())
     val routePoints: StateFlow<List<LatLng>> = _routePoints
@@ -24,15 +30,46 @@ class RoutingViewModel : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    fun observeGeocodingUpdates(geocodingViewModel: GeocodingViewModel) {
+    fun observeGeocodingUpdates(
+        geocodingViewModel: GeocodingViewModel,
+        geofenceUtil: GeofenceUtil
+    ) {
         viewModelScope.launch {
             geocodingViewModel.coordinatesFetched.collect { isFetched ->
                 if (isFetched) {
                     fetchRoute()
+                    geoFence(geofenceUtil)
                 }
             }
         }
     }
+
+    fun changeRadius(radius:Float) {
+        var zain = radius
+        zain++
+
+    }
+    private fun geoFence(geofenceUtil: GeofenceUtil) {
+        viewModelScope.launch {
+            _startCoordinates.value = SharedRepository.startCoordinates.value
+            _endCoordinates.value = SharedRepository.endCoordinates.value
+
+            // Add geofences for start and end locations
+            _startCoordinates.value?.let {
+                geofenceUtil.createGeoFence(it.latitude, it.longitude)
+                _geofences.value=_geofences.value+it
+            }
+
+            _endCoordinates.value?.let {
+                geofenceUtil.createGeoFence(it.latitude, it.longitude)
+                _geofences.value=_geofences.value+it
+            }
+
+            // Notify that geofences have been added
+            Log.d("RoutingViewModel", "Geofences added: $_geofences")
+        }
+    }
+
 
     fun fetchRoute() {
         viewModelScope.launch {
@@ -45,7 +82,7 @@ class RoutingViewModel : ViewModel() {
             if (startCoordinates != null && endCoordinates != null) {
                 val locations =
                     "${startCoordinates.latitude},${startCoordinates.longitude}:${endCoordinates.latitude},${endCoordinates.longitude}"
-              Log.d("Coodites :",locations)
+                Log.d("Coodites :", locations)
                 try {
 
                     val response = RetrofitInstance.api.getRoute(

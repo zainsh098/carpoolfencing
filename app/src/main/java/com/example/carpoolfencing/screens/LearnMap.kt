@@ -13,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
@@ -22,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.carpoolfencing.geofence.GeofenceUtil
 import com.example.carpoolfencing.viewmodel.GeocodingViewModel
 import com.example.carpoolfencing.viewmodel.RoutingViewModel
 
@@ -37,15 +40,17 @@ import com.example.carpoolfencing.viewmodel.RoutingViewModel
 @Preview
 fun LearnMapScreenPreview() {
 
+    val context = LocalContext.current
     val mockViewModel = RoutingViewModel()
     val mockGeocodingViewModel = GeocodingViewModel()
     val mocknavController = rememberNavController()
+    val geofenceUtil = GeofenceUtil(context)
     LearnMapScreen(
 
         navController = mocknavController,
         viewModel = mockViewModel,
-        viewModelGeoCode = mockGeocodingViewModel
-
+        viewModelGeoCode = mockGeocodingViewModel,
+        geofenceUtil = geofenceUtil
     )
 }
 
@@ -55,55 +60,59 @@ fun LearnMapScreenPreview() {
 fun LearnMapScreen(
     navController: NavController,
     viewModel: RoutingViewModel,
-    viewModelGeoCode: GeocodingViewModel
+    viewModelGeoCode: GeocodingViewModel,
+    geofenceUtil: GeofenceUtil
 ) {
     val scaffoldState = rememberBottomSheetScaffoldState()
-
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .fillMaxWidth()
     ) {
-
         BottomSheetScaffold(
             scaffoldState = scaffoldState,
             sheetContent = {
-                RideAppBottomSheet(viewModel = viewModel, viewModelGeoCode = viewModelGeoCode)
+                RideAppBottomSheet(
+                    viewModel = viewModel,
+                    viewModelGeoCode = viewModelGeoCode,
+                    geofenceUtil
+                )
             },
             sheetPeekHeight = 64.dp,
             sheetContainerColor = Color.White,
             modifier = Modifier.fillMaxSize()
         ) {
-
             MapScreen(viewModel = viewModel, navController = navController)
-
         }
-
-
     }
 }
 
 @Composable
-fun RideAppBottomSheet(viewModel: RoutingViewModel, viewModelGeoCode: GeocodingViewModel) {
+fun RideAppBottomSheet(
+    viewModel: RoutingViewModel,
+    viewModelGeoCode: GeocodingViewModel,
+    geofenceUtil: GeofenceUtil
+) {
     var startLocation by remember { mutableStateOf("") }
     var endLocation by remember { mutableStateOf("") }
-    viewModel.observeGeocodingUpdates(viewModelGeoCode)
+    viewModel.observeGeocodingUpdates(viewModelGeoCode, geofenceUtil)
 
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .padding(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+
+        SliderExample(viewModel)
         BeautifulTextField(
             hint = "Enter Start Location",
             onTextChange = {
-
                 startLocation = it
             }
         )
         BeautifulTextField(hint = "Enter End Location", onTextChange = { endLocation = it })
-
         Spacer(modifier = Modifier.height(16.dp))
-
         FilledTonalButton(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
@@ -113,6 +122,20 @@ fun RideAppBottomSheet(viewModel: RoutingViewModel, viewModelGeoCode: GeocodingV
             Text(text = "Show Directions")
         }
     }
+}
+
+@Composable
+fun SliderExample(routingViewModel: RoutingViewModel) {
+    var sliderPosition by remember { mutableStateOf(0f) }
+    Slider(
+        value = sliderPosition,
+        onValueChange = { sliderPosition = it },
+        onValueChangeFinished = {
+            routingViewModel.changeRadius(sliderPosition)
+        }
+    )
+    Text(text = sliderPosition.toString())
+
 }
 
 
