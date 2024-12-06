@@ -12,7 +12,6 @@ object SharedRepository {
     private val _endCoordinates = MutableStateFlow<LatLng?>(null)
     val endCoordinates: StateFlow<LatLng?> = _endCoordinates
 
-
     fun setStartCoordinates(coordinates: LatLng) {
         _startCoordinates.value = coordinates
     }
@@ -21,6 +20,5 @@ object SharedRepository {
         _endCoordinates.value = coordinates
 
     }
-
-
 }
+

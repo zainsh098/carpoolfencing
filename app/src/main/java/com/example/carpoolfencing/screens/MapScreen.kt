@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
+import com.example.carpoolfencing.constants.GeofenceConstant
 import com.example.carpoolfencing.viewmodel.RoutingViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLngBounds
@@ -17,6 +18,7 @@ fun MapScreen(viewModel: RoutingViewModel, navController: NavController) {
     val endCoordinates by viewModel.endCoordinates.collectAsState()
     val routePoints by viewModel.routePoints.collectAsState()
     val geofences by viewModel.geofences.collectAsState()
+    val radius by viewModel.radius.collectAsState()
 
     val cameraPositionState = rememberCameraPositionState()
 
@@ -47,10 +49,11 @@ fun MapScreen(viewModel: RoutingViewModel, navController: NavController) {
         geofences.forEach { geofence ->
             Circle(
                 center = geofence,
-                radius = 900.0, // Use the same radius as in your geofence
+                radius = radius.toDouble(),
                 strokeColor = Color.Red,
                 fillColor = Color.Red.copy(alpha = 0.2f)
             )
+
         }
         if (routePoints.isNotEmpty()) {
             Polyline(

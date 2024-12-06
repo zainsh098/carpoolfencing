@@ -10,24 +10,31 @@ import com.google.android.gms.location.GeofencingEvent
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        val geofencingEvent = intent?.let { GeofencingEvent.fromIntent(it) }
+        if (context == null || intent == null) {
+            Log.e("GeofenceReceiver", "Context or Intent is null")
+            return
+        }
+
+        val geofencingEvent = GeofencingEvent.fromIntent(intent)
         if (geofencingEvent != null) {
             if (geofencingEvent.hasError()) {
-                Log.e("GeofenceReceiver", "Error receiving geofence event")
+                val errorCode = geofencingEvent.errorCode
+                Log.e("GeofenceReceiver", "Geofencing event error: $errorCode")
                 return
             }
         }
 
         val geofenceTransition = geofencingEvent?.geofenceTransition
+        val triggeringGeofences = geofencingEvent?.triggeringGeofences
 
-        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
-            geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT
-        ) {
-            // Handle the geofence transition
-            Log.d("GeofenceReceiver", "Geofence transition detected")
-        } else {
-            // Log the error
-            Log.e("GeofenceReceiver", "Invalid geofence transition type")
+        val transitionType = when (geofenceTransition) {
+            Geofence.GEOFENCE_TRANSITION_ENTER -> "ENTER"
+            Geofence.GEOFENCE_TRANSITION_EXIT -> "EXIT"
+            else -> "UNKNOWN"
+        }
+
+        triggeringGeofences?.forEach { geofence ->
+            Log.d("GeofenceReceiver", "User $transitionType geofence: ${geofence.requestId}")
         }
     }
 }

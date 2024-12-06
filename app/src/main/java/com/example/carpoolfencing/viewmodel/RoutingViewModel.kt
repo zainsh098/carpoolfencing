@@ -1,7 +1,6 @@
 package com.example.carpoolfencing.viewmodel
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.carpoolfencing.constants.GeofenceConstant
@@ -11,9 +10,14 @@ import com.example.carpoolfencing.repository.SharedRepository
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class RoutingViewModel : ViewModel() {
+
+
+    private val _radius = MutableStateFlow(GeofenceConstant.GEOFENCE_RADIUS_IN_METERS)
+    val radius = _radius.asStateFlow()
 
     private val _geofences = MutableStateFlow<List<LatLng>>(emptyList())
     val geofences: StateFlow<List<LatLng>> = _geofences
@@ -44,11 +48,13 @@ class RoutingViewModel : ViewModel() {
         }
     }
 
-    fun changeRadius(radius:Float) {
-        var zain = radius
-        zain++
+
+    fun changeRadius(newRadius: Float) {
+        _radius.value = newRadius
 
     }
+
+
     private fun geoFence(geofenceUtil: GeofenceUtil) {
         viewModelScope.launch {
             _startCoordinates.value = SharedRepository.startCoordinates.value
@@ -56,13 +62,13 @@ class RoutingViewModel : ViewModel() {
 
             // Add geofences for start and end locations
             _startCoordinates.value?.let {
-                geofenceUtil.createGeoFence(it.latitude, it.longitude)
-                _geofences.value=_geofences.value+it
+                geofenceUtil.createGeoFence(it.latitude, it.longitude, _radius.value)
+                _geofences.value = _geofences.value + it
             }
 
             _endCoordinates.value?.let {
-                geofenceUtil.createGeoFence(it.latitude, it.longitude)
-                _geofences.value=_geofences.value+it
+                geofenceUtil.createGeoFence(it.latitude, it.longitude, _radius.value)
+                _geofences.value = _geofences.value + it
             }
 
             // Notify that geofences have been added

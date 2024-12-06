@@ -1,5 +1,6 @@
 package com.example.carpoolfencing.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,7 +41,6 @@ import com.example.carpoolfencing.viewmodel.RoutingViewModel
 @Composable
 @Preview
 fun LearnMapScreenPreview() {
-
     val context = LocalContext.current
     val mockViewModel = RoutingViewModel()
     val mockGeocodingViewModel = GeocodingViewModel()
@@ -104,7 +105,7 @@ fun RideAppBottomSheet(
             .padding(16.dp)
     ) {
 
-        SliderExample(viewModel)
+        SliderExample(routingViewModel = viewModel, geofenceUtil = geofenceUtil)
         BeautifulTextField(
             hint = "Enter Start Location",
             onTextChange = {
@@ -125,17 +126,29 @@ fun RideAppBottomSheet(
 }
 
 @Composable
-fun SliderExample(routingViewModel: RoutingViewModel) {
-    var sliderPosition by remember { mutableStateOf(0f) }
-    Slider(
-        value = sliderPosition,
-        onValueChange = { sliderPosition = it },
-        onValueChangeFinished = {
-            routingViewModel.changeRadius(sliderPosition)
-        }
-    )
-    Text(text = sliderPosition.toString())
+fun SliderExample(routingViewModel: RoutingViewModel, geofenceUtil: GeofenceUtil) {
+    val context = LocalContext.current
+    var latitude by remember { mutableStateOf(0.0) }
+    var longitude by remember { mutableStateOf(0.0) }
+    val radius by routingViewModel.radius.collectAsState()
 
+    Column {
+        Slider(
+            value = radius,
+            valueRange = 100f..2000f,
+            onValueChange = {
+                routingViewModel.changeRadius(it)
+                Log.d("Radius", it.toString())
+                Log.d("Radius", it.toString())
+
+            },
+            onValueChangeFinished = {
+                // Re-create geofence when slider stops
+                geofenceUtil.createGeoFence(latitude, longitude, radius)
+            }
+        )
+        Text(text = "Radius: ${radius.toInt()} meters")
+    }
 }
 
 
@@ -171,5 +184,8 @@ fun BeautifulTextField(
             .background(Color.White, shape)
     )
 }
+
+
+
 
 
